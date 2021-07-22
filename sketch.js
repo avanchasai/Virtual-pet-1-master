@@ -1,115 +1,125 @@
-var dog,sadDog,happyDog,garden,washroom, database;
-var foodS,foodStock;
-var fedTime,lastFed,currentTime;
-var feed,addFood;
-var foodObj;
-var gameState,readState;
+var dog, happyDog, database, foodS, foodStock
+var dogImg, dogHappyImg;
+var milk, milkImg;
 
-function preload(){
-sadDog=loadImage("Images/Dog.png");
-happyDog=loadImage("Images/happy dog.png");
-garden=loadImage("Images/Garden.png");
-washroom=loadImage("Images/Wash Room.png");
-bedroom=loadImage("Images/Bed Room.png");
+
+function preload()
+{
+  dogImg = loadImage("Dog.png");
+  dogHappyImg = loadImage("happydog.png");
+  milkImg = loadImage("milk.png");
+  
+
 }
 
 function setup() {
-  database=firebase.database();
-  createCanvas(400,500);
+  database = firebase.database();
+  createCanvas(500, 500);
   
-  foodObj = new Food();
+  dog = createSprite(250,250,10,10);
+  dog.addImage(dogImg);
+  dog.scale = 0.15;
 
-  foodStock=database.ref('Food');
+  emo = createSprite(200,200,1,1);
+  
+  foodStock = database.ref('food');
   foodStock.on("value",readStock);
-
-  fedTime=database.ref('FeedTime');
-  fedTime.on("value",function(data){
-    lastFed=data.val();
-  });
-
-  //read game state from database
-  readState=database.ref('gameState');
-  readState.on("value",function(data){
-    gameState=data.val();
-  });
-   
-  dog=createSprite(200,400,150,150);
-  dog.addImage(sadDog);
-  dog.scale=0.15;
+  foodStock.set(20);
   
-  feed=createButton("Feed the dog");
-  feed.position(700,95);
-  feed.mousePressed(feedDog);
+  milk = createSprite(140,435,10,10);
+  milk.addImage(milkImg);
+  milk.scale = 0.025;
 
-  addFood=createButton("Add Food");
-  addFood.position(800,95);
-  addFood.mousePressed(addFoods);
+  milk1 = createSprite(210,280,10,10);
+  milk1.addImage(milkImg);
+  milk1.scale = 0.025;
+  milk1.visible = false;
+
+
+  for (var i = 5; i < 500; i=i+10) 
+{
+
+var dot = createSprite(i, 5, 3, 3);
+dot.shapeColor = "blue";
+
+}
+for (var i = 5; i < 500; i=i+10) 
+{
+
+var dot1 = createSprite(i, 495, 3, 3);
+dot1.shapeColor = "blue";
+
+}
+for (var i = 5; i < 500; i=i+10) 
+{
+
+var dot1 = createSprite(495,i, 3, 3);
+dot1.shapeColor = "blue";
+
+}
+for (var i = 5; i < 500; i=i+10) 
+{
+
+var dot1 = createSprite(5,i, 3, 3);
+dot1.shapeColor = "blue";
+
+}
 }
 
-function draw() {
-  currentTime=hour();
-  if(currentTime==(lastFed+1)){
-      update("Playing");
-      foodObj.garden();
-   }else if(currentTime==(lastFed+2)){
-    update("Sleeping");
-      foodObj.bedroom();
-   }else if(currentTime>(lastFed+2) && currentTime<=(lastFed+4)){
-    update("Bathing");
-      foodObj.washroom();
-   }else{
-    update("Hungry")
-    foodObj.display();
-   }
+
+function draw() {  
+  background("pink")
+
+  if(foodS !== 0){
+  if(keyWentDown(UP_ARROW)){
+    writeStock(foodS);
+    dog.addImage(dogHappyImg);
+    milk1.visible = true;
+
    
-   if(gameState!="Hungry"){
-     feed.hide();
-     addFood.hide();
-     dog.remove();
-   }else{
-    feed.show();
-    addFood.show();
-    dog.addImage(sadDog);
-   }
- 
+  }
+
+  if(keyWentUp(UP_ARROW)){
+    writeStock(foodS);
+    dog.addImage(dogImg);
+    milk1.visible = false;
+  }
+}
+
+if(foodS == 0){
+  
+  dog.addImage(dogImg);
+  foodS = 20;
+
+}
+
+
+
   drawSprites();
+  textSize(17);
+  fill("black");
+  text("I am your Puppy 🐶Shiro..😍 I am Hungry ",100,150);
+  fill("black");
+  text("Long Press up arrow key to feed your pet Dog Shiro",50,50);
+  fill("black");
+  text("Milk Bottles Remaining  "+foodS,170,440);
 }
 
-//function to read food Stock
-function readStock(data){
-  foodS=data.val();
-  foodObj.updateFoodStock(foodS);
+function readStock(data)
+{
+  foodS = data.val();
 }
 
+function writeStock(x){
 
-//function to update food stock and last fed time
-function feedDog(){
-  dog.addImage(happyDog);
+  if(x<=0){
+    x = 0;
+  }else{
+    x=x-1
+  }
 
-  foodObj.updateFoodStock(foodObj.getFoodStock()-1);
   database.ref('/').update({
-    Food:foodObj.getFoodStock(),
-    FeedTime:hour(),
-    gameState:"Hungry"
+    food:x
   })
 }
-
-//function to add food in stock
-function addFoods(){
-  foodS++;
-  database.ref('/').update({
-    Food:foodS
-  })
-}
-
-//update gameState
-function update(state){
-  database.ref('/').update({
-    gameState:state
-  })
-}
-
-
-
-
 
